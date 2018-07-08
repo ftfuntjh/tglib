@@ -1,44 +1,44 @@
 import {tdlib_json, error_callback, tdlib_interface} from "../tdlib-core/tdlib-load";
+import {Type} from "../tdlib-core/Type";
 import Path from "path";
 
-export interface tdlibParameters {
-    enable_storage_optimizer: boolean,
-    use_message_database: boolean,
-    use_secret_chats: boolean,
-    system_language_code: string,
-    application_version: string,
-    device_model: string,
-    system_version: string,
-    verbosityLevel: number
+
+namespace Option {
+    export interface tdlibParameters {
+        enable_storage_optimizer: boolean,
+        use_message_database: boolean,
+        use_secret_chats: boolean,
+        system_language_code: string,
+        application_version: string,
+        device_model: string,
+        system_version: string,
+        verbosityLevel: number
+    }
+
+    export interface tdlib_app {
+        appId: string,
+        apiHash: string,
+        logPath: string
+    }
+
+
+    export interface tdlib_options extends tdlibParameters, tdlib_app {
+        tdlib_path: string
+    }
 }
 
-export interface tdllib_app {
-    appId: string,
-    apiHash: string,
-    logPath: string
-}
-
-
-export interface tdlib_options extends tdlibParameters, tdllib_app {
-    tdlib_path: string
-}
-
-export interface query {
-    [key: string]: string | number | query
-}
-
-export class Client {
-    private readonly options: tdlib_options;
+export class BaseClient {
+    private readonly options: Option.tdlib_options;
     private client: any;
     private readonly tdlib: tdlib_interface;
 
-    constructor(options: tdlib_options) {
+    constructor(options: Option.tdlib_options) {
         this.options = options;
         this.tdlib = tdlib_json(Path.resolve(__dirname, options.tdlib_path));
         this.tdlib.td_set_log_file_path(Path.resolve(__dirname, options.logPath));
         this.tdlib.td_set_log_verbosity_level(options.verbosityLevel);
         this.tdlib.td_set_log_fatal_error_callback(error_callback((error: Error) => {
-            console.log(error);
+            console.error(error);
         }));
     }
 
@@ -57,8 +57,8 @@ export class Client {
         }));
     }
 
-    send(queryJson: query): Promise<Error | query> {
-        return new Promise<Error | query>((resolve, reject) => {
+    _send(queryJson: Type.BaseMessage): Promise<Type.BaseMessage | Error> {
+        return new Promise<Error | Type.BaseMessage>((resolve, reject) => {
             if (!this.client) {
                 return reject(new Error("client not created"));
             }
@@ -75,7 +75,7 @@ export class Client {
         })
     }
 
-    _receive(timeout = 10): Promise<query | null> {
+    _receive(timeout = 10): Promise<Type.BaseMessage | null> {
         return new Promise((resolve, reject) => {
             if (!this.client) {
                 return reject(new Error("client not created"));

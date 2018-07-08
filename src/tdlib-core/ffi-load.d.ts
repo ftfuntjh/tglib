@@ -37,7 +37,7 @@ declare module "ffi-napi" {
     interface tdlib_function {
         [name: string]: tdlib_interface
     }
-
+    
     export function Library(path: string, arguments: functionCall): tdlib_interface ;
 
     export function Callback(symbol: returnType, params: Array<argument>, callback: (error: Error) => void): (err: Error) => void;
